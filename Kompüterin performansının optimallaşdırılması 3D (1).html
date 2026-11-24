@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kompüterin performansının optimallaşdırılması 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700;800&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@property --c1{syntax:'<color>';inherits:true;initial-value:#ffe2b8}
+@property --c2{syntax:'<color>';inherits:true;initial-value:#ffb3d9}
+:root{--card:#fffaf4;--tx:#3d1634;--mu:#6a3a5a;--rgb:linear-gradient(90deg,#ff3b3b,#ff9f00,#ffd400,#3ddc84,#ff4fd8,#ff3b3b);color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#fff3e4;color:var(--tx);font-family:Manrope,system-ui,sans-serif}
+.mesh{position:fixed;inset:-30%;z-index:0;transition:--c1 1.2s,--c2 1.2s;background:radial-gradient(38% 38% at 22% 28%,var(--c1),transparent 72%),radial-gradient(40% 40% at 78% 30%,var(--c2),transparent 72%),radial-gradient(40% 40% at 70% 82%,var(--c1),transparent 72%),radial-gradient(38% 38% at 18% 80%,var(--c2),transparent 72%),#fff3e4;animation:mesh 20s ease-in-out infinite alternate}
+@keyframes mesh{to{transform:rotate(30deg) scale(1.12)}}
+.bignum{position:fixed;right:2vw;bottom:4vh;z-index:0;font:800 30vw/1 Sora,sans-serif;color:transparent;-webkit-text-stroke:3px #ffffffcc;pointer-events:none}
+#gl{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.bar{position:fixed;top:env(safe-area-inset-top,0px);left:0;height:4px;background:var(--rgb);background-size:300% 100%;animation:flow 6s linear infinite;transition:width .6s;z-index:5}
+@keyframes flow{to{background-position:300% 0}}
+.tick{position:fixed;top:calc(4px + env(safe-area-inset-top,0px));left:0;right:0;height:30px;overflow:hidden;z-index:4;background:#ffffffaa;backdrop-filter:blur(6px);display:flex;align-items:center}
+.tick div{display:flex;gap:10px;white-space:nowrap;animation:mq 34s linear infinite;padding-left:10px}
+.tick span{font:700 11px Sora,sans-serif;letter-spacing:.12em;padding:4px 12px;border-radius:20px;color:#3d1634}
+@keyframes mq{to{transform:translateX(-50%)}}
+.s{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:center;padding:calc(clamp(18px,3vw,40px) + 34px) clamp(16px,5vw,80px) 92px;overflow-y:auto;opacity:0;visibility:hidden;transform:perspective(1400px) rotateY(28deg) translateX(80px) scale(.94);transition:all .8s cubic-bezier(.2,.8,.2,1)}
+.s.on{opacity:1;visibility:visible;transform:none}
+@media(min-width:900px){.s{padding-right:40vw}}
+.r{opacity:0}.s.on .r{animation:up .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*.09s + .2s)}
+@keyframes up{from{opacity:0;translate:0 36px}to{opacity:1;translate:0 0}}
+h1,h2{font-family:Sora,sans-serif;font-weight:800;line-height:1.1;filter:drop-shadow(0 3px 0 #fff) drop-shadow(0 10px 14px rgba(150,50,90,.25))}
+h2{font-size:clamp(22px,3.1vw,40px);margin-bottom:6px}
+h1{font-size:clamp(28px,4.6vw,58px)}
+.g-t{background:linear-gradient(90deg,#e8a645,#e08a00,#0f9d58,#e8a645);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flow 6s linear infinite}
+.tag{font:700 12px Sora,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#e8a645;margin-bottom:10px}
+.lead{color:var(--mu);max-width:720px;font-size:clamp(13.5px,1.35vw,16px);line-height:1.6;margin:8px 0 18px}
+.grid{display:grid;gap:14px}.c2{grid-template-columns:repeat(2,1fr)}.c4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+@media(max-width:620px){.c2{grid-template-columns:1fr}}
+.card{padding:16px;border-radius:18px;border:2.5px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,var(--rgb) border-box;background-size:100% 100%,300% 100%;animation:flow 8s linear infinite;transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s;box-shadow:0 14px 30px rgba(170,60,110,.25)}
+.card h3{font:700 15px Sora,sans-serif;margin-bottom:7px}
+.card p,.card li{color:var(--mu);font-size:13px;line-height:1.55}
+.card ul{padding-left:16px}
+.b{height:9px;border-radius:9px;background:#4a1d3d1f;overflow:hidden;margin:6px 0 10px}
+.b i{display:block;height:100%;width:0;border-radius:9px;background:var(--rgb);background-size:300% 100%;animation:flow 5s linear infinite;transition:width 1.6s cubic-bezier(.2,.8,.2,1)}
+.s.on .b i{width:var(--w)}
+.lbl{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mu)}.lbl b{color:var(--tx)}
+.foot{position:absolute;left:clamp(16px,5vw,80px);bottom:80px;font-size:11.5px;color:#6a3a5aaa}
+.nav{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;z-index:6;padding:8px 14px;border-radius:40px;background:#fffc;backdrop-filter:blur(10px);border:2px solid #fff;box-shadow:0 8px 24px rgba(170,60,110,.25)}
+.nav button{width:34px;height:34px;border-radius:50%;border:0;background:var(--rgb);background-size:300% 100%;animation:flow 5s linear infinite;color:#3d1634;font-weight:800;cursor:pointer}
+.dots{display:flex;gap:7px}.dots span{width:8px;height:8px;border-radius:9px;background:#3d163433;cursor:pointer;transition:all .4s}.dots span.on{width:26px;background:#e8a645}
+.num{font:700 12px Sora;color:var(--mu);min-width:44px;text-align:center}
+.meta{margin-top:22px;display:grid;gap:8px;font-size:14.5px}.meta b{color:#e8a645;font-weight:700;display:inline-block;min-width:96px}
+.gg{text-align:center}.gg svg{width:112px;height:112px;transform:rotate(-90deg)}
+.gg .t{fill:none;stroke:#4a1d3d1f;stroke-width:9}.gg .v{fill:none;stroke-width:9;stroke-linecap:round;stroke-dasharray:0 252;transition:stroke-dasharray 1.8s cubic-bezier(.2,.8,.2,1)}
+.gg .n{font:800 22px Sora;margin-top:-72px;height:72px;display:grid;place-items:center}
+.blocks{display:grid;grid-template-columns:repeat(15,1fr);gap:4px}.blocks div{aspect-ratio:1;border-radius:4px;transition:background .6s}
+.btnrow{display:flex;gap:10px;align-items:center;margin-top:10px;font-size:13px;color:var(--mu)}
+.live{width:10px;height:10px;border-radius:50%;background:#9ccc3c;animation:pl 1s infinite;display:inline-block}
+@keyframes pl{50%{opacity:.35;transform:scale(.8)}}
+table{width:100%;border-collapse:collapse;font-size:12.5px;color:var(--mu)}td,th{padding:6px 5px;text-align:left;border-bottom:1px solid #4a1d3d1f}th{color:#e8a645;font-weight:700}
+td .b{margin:0;min-width:60px}td .b i{transition:width .8s}
+.step{display:flex;gap:12px;align-items:flex-start;margin-bottom:11px}.step em{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 13px Sora;color:#3d1634;background:var(--rgb);background-size:300% 100%;font-style:normal;animation:flow 5s linear infinite}
+.step p{font-size:13px;color:var(--mu);line-height:1.5}.step b{color:var(--tx)}
+.big{font:800 clamp(24px,3vw,38px) Sora}
+.chk li{list-style:none;position:relative;padding-left:26px;margin-bottom:7px}.chk li:before{content:"✓";position:absolute;left:0;color:#9ccc3c;font-weight:800}
+.hint{font-size:12px;color:#6a3a5acc;margin-top:8px}
+.cube3d{display:none;position:fixed;right:14vw;top:50%;width:200px;height:200px;margin-top:-100px;transform-style:preserve-3d;animation:cb 9s linear infinite;z-index:1}
+.nogl .cube3d{display:block}
+.cube3d i{position:absolute;inset:0;border:3px solid #fff;border-radius:18px}
+.cube3d i:nth-child(1){transform:translateZ(100px);background:linear-gradient(135deg,#ff9f00,#ff4fd8)}
+.cube3d i:nth-child(2){transform:rotateY(90deg) translateZ(100px);background:linear-gradient(135deg,#ffd400,#3ddc84)}
+.cube3d i:nth-child(3){transform:rotateY(180deg) translateZ(100px);background:linear-gradient(135deg,#ff4fd8,#ffd400)}
+.cube3d i:nth-child(4){transform:rotateY(-90deg) translateZ(100px);background:linear-gradient(135deg,#3ddc84,#ff9f00)}
+.cube3d i:nth-child(5){transform:rotateX(90deg) translateZ(100px);background:linear-gradient(135deg,#ff3b3b,#ffd400)}
+.cube3d i:nth-child(6){transform:rotateX(-90deg) translateZ(100px);background:linear-gradient(135deg,#ff4fd8,#3ddc84)}
+@keyframes cb{from{transform:perspective(900px) rotateX(-20deg) rotateY(0)}to{transform:perspective(900px) rotateX(-20deg) rotateY(360deg)}}
+html,body{background:linear-gradient(#fff0b8,#ffd27a 55%,#ffa94d)}
+#gl{z-index:0}
+.s::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none}
+.s.B{transform:perspective(1400px) rotateY(-28deg) translateX(-80px) scale(.94)}
+.s.B.on{transform:none}
+@media(min-width:900px){.s.A{padding-right:42vw}.s.B{padding-left:42vw;padding-right:5vw}.s.B .foot{left:42vw}
+.s.A::before{background:linear-gradient(90deg,#fff4e8f2 0,#fff4e8d6 52%,#fff4e800 62%)}
+.s.B::before{background:linear-gradient(270deg,#fff4e8f2 0,#fff4e8d6 52%,#fff4e800 62%)}}
+@media(max-width:899px){.s::before{background:#fff4e8cc}.s{padding-bottom:130px}}
+.hud{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));right:14px;z-index:6;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 14px;border-radius:30px;background:#fffd;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(170,60,110,.3);font:700 12px Sora,sans-serif;color:#3d1634;border:2px solid #fff}
+.hud b{font-size:15px;min-width:44px;text-align:right;color:#e8a645}
+.hud button{border:0;border-radius:20px;padding:8px 14px;font:700 12px Sora,sans-serif;cursor:pointer;background:#3d163422;color:#3d1634;transition:all .3s}
+.hud button.on{background:var(--rgb);background-size:300% 100%;animation:flow 3s linear infinite}
+@media(max-width:700px){.hud{bottom:calc(66px + env(safe-area-inset-bottom,0px));right:8px}}
+:root{--card:#2b4332;--tx:#f3efe0;--mu:#cdd6bd;--rgb:linear-gradient(90deg,#c9a24a,#e07b2c,#9ccc3c,#e8d36a,#c9a24a);color-scheme:dark}
+html,body{background:linear-gradient(#2f4b36,#4c6b43 55%,#7a5f35)}
+h1,h2{filter:drop-shadow(0 3px 0 rgba(20,36,26,.7)) drop-shadow(0 10px 14px rgba(10,20,14,.4))}
+.g-t{background:linear-gradient(90deg,#e8d36a,#fff6d6,#b6e04a,#e8a645,#e8d36a);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flow 6s linear infinite}
+.card{box-shadow:0 14px 30px rgba(10,22,14,.45)}
+.b,.gg .t{background-color:#ffffff26}.gg .t{background:none;stroke:#ffffff26}
+td,th{border-bottom-color:#ffffff22}
+.hint{color:#cdd6bdcc}.foot{color:#cdd6bd99}
+.step em,.nav button{color:#1f2f24}
+.nav,.hud{background:#2b4332e6;border-color:#ffffff30;color:#f3efe0;box-shadow:0 8px 24px rgba(10,22,14,.5)}
+.hud b,.dots span.on{color:#e8a645}.dots span.on{background:#e8a645}.dots span{background:#ffffff44}
+.hud button{background:#ffffff26;color:#f3efe0}.hud button.on{color:#1f2f24;background:var(--rgb);background-size:300% 100%}
+.tick{background:#2b4332cc}.tick span{color:#1f2f24}
+@media(min-width:900px){.s.A::before{background:linear-gradient(90deg,#22382af2 0,#22382ad2 52%,#22382a00 62%)}.s.B::before{background:linear-gradient(270deg,#22382af2 0,#22382ad2 52%,#22382a00 62%)}}
+@media(max-width:899px){.s::before{background:#22382acc}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas><div class="bar" id="bar"></div><div class="tick" id="tick"></div>
+
+<section class="s on">
+ <div class="tag r">Kompüter sistemləri · Təqdimat</div>
+ <h1 class="r">Kompüterin <span class="g-t">performansının optimallaşdırılması</span></h1>
+ <p class="lead r">Aparat, əməliyyat sistemi və proqram səviyyəsində sürətin artırılması, darboğazların aşkarlanması və sistemin sabit işləməsinin təmin edilməsi.</p>
+ <div class="meta r"><div><b>Hazırladı:</b>Arif Həsənov</div><div><b>Müəllim:</b>Kamran Əbilov</div><div><b>Qrup:</b>656a1</div></div>
+ <p class="hint r">Sağ aşağıdakı «Boost» düyməsini açın: lövhədə data axını və ventilyatorlar sürətlənir.</p>
+</section>
+
+<section class="s">
+ <div class="tag r">01 · Əsas anlayışlar</div>
+ <h2 class="r">Performans nədir və <span class="g-t">necə ölçülür?</span></h2>
+ <p class="lead r">Performans — kompüterin vahid zamanda yerinə yetirdiyi işin həcmidir. Sistemin sürəti ən zəif halqadan, yəni darboğazdan (bottleneck) asılıdır. Optimallaşdırmadan əvvəl ölçmə aparılır.</p>
+ <div class="grid c4">
+  <div class="card gg r"><svg viewBox="0 0 100 100"><circle class="t" cx="50" cy="50" r="40"/><circle class="v" cx="50" cy="50" r="40" stroke="#ff9f00" data-p="72"/></svg><div class="n"><span><span data-n="72">0</span>%</span></div><h3>CPU yükü</h3><p>İşlənmə faizi, tezlik (GHz), nüvə sayı.</p></div>
+  <div class="card gg r"><svg viewBox="0 0 100 100"><circle class="t" cx="50" cy="50" r="40"/><circle class="v" cx="50" cy="50" r="40" stroke="#e07b2c" data-p="58"/></svg><div class="n"><span><span data-n="58">0</span>%</span></div><h3>RAM</h3><p>Yaddaşın doluluğu və səhifə faylı fəaliyyəti.</p></div>
+  <div class="card gg r"><svg viewBox="0 0 100 100"><circle class="t" cx="50" cy="50" r="40"/><circle class="v" cx="50" cy="50" r="40" stroke="#9ccc3c" data-p="35"/></svg><div class="n"><span><span data-n="35">0</span>%</span></div><h3>Disk</h3><p>Oxuma/yazma sürəti (MB/s), cavab müddəti (ms).</p></div>
+  <div class="card gg r"><svg viewBox="0 0 100 100"><circle class="t" cx="50" cy="50" r="40"/><circle class="v" cx="50" cy="50" r="40" stroke="#e8d36a" data-p="64"/></svg><div class="n"><span><span data-n="64">0</span>°C</span></div><h3>Temperatur</h3><p>65°C-dən yuxarı throttling, yəni sürət itkisi yaradır.</p></div>
+ </div>
+ <p class="hint r">Əsas metriklər: cavab müddəti (latency), ötürmə qabiliyyəti (throughput), FPS, yükləmə vaxtı.</p>
+ <div class="foot">Arif Həsənov · 656a1</div>
+</section>
+
+<section class="s">
+ <div class="tag r">02 · Aparat səviyyəsi</div>
+ <h2 class="r">Aparat komponentlərinin <span class="g-t">təsiri</span></h2>
+ <p class="lead r">Ən böyük sıçrayış çox vaxt aparat yeniləməsindən gəlir. Kamera 3D ana lövhə üzərində RAM modullarına və soyuducu ventilyatora uçur.</p>
+ <div class="grid c2">
+  <div class="card r"><h3>Prosessor (CPU)</h3><p>Çox nüvəli və yüksək IPC-li model hesablamanı sürətləndirir.</p><div class="lbl"><span>Təsir</span><b>85%</b></div><div class="b"><i style="--w:85%"></i></div><ul><li>Nüvə sayı, L3 keş, boost tezliyi</li></ul></div>
+  <div class="card r"><h3>Operativ yaddaş (RAM)</h3><p>Minimum 16 GB, ikikanallı rejim, XMP profili. DDR4 və ya DDR5.</p><div class="lbl"><span>Təsir</span><b>78%</b></div><div class="b"><i style="--w:78%"></i></div></div>
+  <div class="card r"><h3>SSD yaddaş</h3><p>HDD-dən SSD-yə keçid yükləməni dəfələrlə azaldır. NVMe 3000+ MB/s verir.</p><div class="lbl"><span>Təsir</span><b>95%</b></div><div class="b"><i style="--w:95%"></i></div></div>
+  <div class="card r"><h3>Soyutma</h3><p>Toz və qurumuş termopasta temperaturu artırır. Təmizləmə sabit tezlik verir.</p><div class="lbl"><span>Təsir</span><b>60%</b></div><div class="b"><i style="--w:60%"></i></div></div>
+ </div>
+ <p class="hint r">Qayda: əvvəl ən zəif komponent tapılır, sonra yenilənir. 4 GB RAM üzərində prosessor dəyişmək səmərəsizdir.</p>
+ <div class="foot">Arif Həsənov · 656a1</div>
+</section>
+
+<section class="s">
+ <div class="tag r">03 · Əməliyyat sistemi</div>
+ <h2 class="r">Sistem parametrlərinin <span class="g-t">tənzimlənməsi</span></h2>
+ <div class="grid c2" style="margin-top:12px">
+  <div>
+   <div class="step r"><em>1</em><p><b>Başlanğıc proqramları.</b> Task Manager → Startup bölməsində lazımsızlar söndürülür.</p></div>
+   <div class="step r"><em>2</em><p><b>Enerji planı.</b> «High performance» və ya «Balanced» rejim seçilir.</p></div>
+   <div class="step r"><em>3</em><p><b>Yeniləmələr və sürücülər.</b> OS, GPU və chipset drayverləri səhvləri aradan qaldırır.</p></div>
+   <div class="step r"><em>4</em><p><b>Vizual effektlər.</b> Animasiya və şəffaflığın azaldılması zəif cihazı sürətləndirir.</p></div>
+   <div class="step r"><em>5</em><p><b>Virtual yaddaş.</b> Page file SSD-də saxlanılır, ölçüsü sistemə tərk edilir.</p></div>
+  </div>
+  <div class="card r"><h3>Açılış müddəti (nümunə)</h3>
+   <div class="lbl"><span>Standart quraşdırma</span><b><span data-n="48">0</span> san</b></div><div class="b"><i style="--w:96%"></i></div>
+   <div class="lbl"><span>Startup təmizləndikdən sonra</span><b><span data-n="29">0</span> san</b></div><div class="b"><i style="--w:58%"></i></div>
+   <div class="lbl"><span>SSD + təmizləmə</span><b><span data-n="14">0</span> san</b></div><div class="b"><i style="--w:28%"></i></div>
+   <h3 style="margin-top:12px">Faydalı əmrlər</h3>
+   <ul><li><b style="color:#e8a645">msconfig</b> — konfiqurasiya</li><li><b style="color:#e8a645">sfc /scannow</b> — fayl bütövlüyü</li><li><b style="color:#e8a645">cleanmgr</b> — disk təmizləmə</li><li><b style="color:#e8a645">perfmon</b> — performans monitoru</li></ul></div>
+ </div>
+ <div class="foot">Arif Həsənov · 656a1</div>
+</section>
+
+<section class="s">
+ <div class="tag r">04 · Yaddaş və disk</div>
+ <h2 class="r">Diskin təmizlənməsi və <span class="g-t">defraqmentasiya</span></h2>
+ <div class="grid c2" style="margin-top:12px">
+  <div class="card r"><h3>Fayl blokları (canlı simulyasiya)</h3>
+   <div class="blocks" id="blocks"></div>
+   <div class="btnrow"><span class="live"></span><span id="st">Parçalanmış vəziyyət...</span></div>
+   <p class="hint">Narıncı — sistem, sarı — sənəd, yaşıl — media, kəhrəbaya — proqram.</p></div>
+  <div class="card r"><h3>Nələr edilməlidir?</h3>
+   <ul class="chk">
+    <li><b>HDD:</b> ayda bir defraqmentasiya, oxuma başlığının yolunu qısaldır.</li>
+    <li><b>SSD:</b> defraqmentasiya edilmir; TRIM aktiv saxlanılır.</li>
+    <li>Müvəqqəti fayllar, keş və zibil qutusu təmizlənir.</li>
+    <li>Diskin 15–20%-i boş saxlanılır.</li>
+    <li>S.M.A.R.T. ilə disk sağlamlığı izlənir.</li>
+   </ul>
+   <div class="lbl" style="margin-top:10px"><span>HDD</span><b>150 MB/s</b></div><div class="b"><i style="--w:5%"></i></div>
+   <div class="lbl"><span>SATA SSD</span><b>550 MB/s</b></div><div class="b"><i style="--w:18%"></i></div>
+   <div class="lbl"><span>NVMe SSD</span><b>3500 MB/s</b></div><div class="b"><i style="--w:100%"></i></div></div>
+ </div>
+ <div class="foot">Arif Həsənov · 656a1</div>
+</section>
+
+<section class="s">
+ <div class="tag r">05 · Proqram təminatı</div>
+ <h2 class="r">Proseslər, brauzer və <span class="g-t">təhlükəsizlik</span></h2>
+ <div class="grid c2" style="margin-top:12px">
+  <div class="card r"><h3 style="display:flex;gap:8px;align-items:center"><span class="live"></span>Proses monitoru (simulyasiya)</h3>
+   <table><thead><tr><th>Proses</th><th>CPU</th><th>Yük</th></tr></thead><tbody id="tm"></tbody></table>
+   <p class="hint">Yüksək yük yaradan proses bağlanır və ya yenidən başladılır.</p></div>
+  <div class="grid">
+   <div class="card r"><h3>Fon proseslərinə nəzarət</h3><ul><li>İstifadə olunmayan xidmətlər söndürülür</li><li>Eyni anda bir antivirus işlədilir</li><li>Yeniləmələr iş saatlarından kənara salınır</li></ul></div>
+   <div class="card r"><h3>Brauzer</h3><ul><li>Lazımsız əlavələr silinir, tab sayı azaldılır</li><li>Keş təmizlənir, hardware acceleration aktivdir</li></ul></div>
+   <div class="card r"><h3>Zərərli proqramlar</h3><p>Virus, miner və reklam proqramları CPU və şəbəkəni gizli yükləyir. Müntəzəm tam skan vacibdir.</p></div>
+  </div>
+ </div>
+ <div class="foot">Arif Həsənov · 656a1</div>
+</section>
+
+<section class="s">
+ <div class="tag r">06 · Diaqnostika</div>
+ <h2 class="r">Alətlər və <span class="g-t">əvvəl / sonra</span></h2>
+ <div class="grid c2" style="margin-top:12px">
+  <div class="card r"><h3>Monitorinq və benchmark</h3>
+   <table><tr><th>Alət</th><th>Təyinatı</th></tr>
+   <tr><td>Task Manager</td><td>Real vaxtda yük</td></tr>
+   <tr><td>HWMonitor, HWiNFO</td><td>Temperatur</td></tr>
+   <tr><td>CPU-Z, GPU-Z</td><td>Aparat məlumatı</td></tr>
+   <tr><td>CrystalDiskMark</td><td>Disk sürəti</td></tr>
+   <tr><td>Cinebench</td><td>CPU testi</td></tr>
+   <tr><td>MemTest86</td><td>RAM xətaları</td></tr></table></div>
+  <div class="card r"><h3>Nəticələr (nümunə)</h3>
+   <div class="lbl"><span>Açılış vaxtı</span><b>48 → <span data-n="17">0</span> san</b></div><div class="b"><i style="--w:35%"></i></div>
+   <div class="lbl"><span>Boş RAM istifadəsi</span><b>82% → <span data-n="46">0</span>%</b></div><div class="b"><i style="--w:46%"></i></div>
+   <div class="lbl"><span>Proqram açılması</span><b>9 → <span data-n="3">0</span> san</b></div><div class="b"><i style="--w:33%"></i></div>
+   <div class="lbl"><span>Yükdə temperatur</span><b>91 → <span data-n="72">0</span>°C</b></div><div class="b"><i style="--w:72%"></i></div>
+   <p class="hint">Narıncı sütunlar əvvəl, yaşıllar sonra. Ölçmə hər dəyişiklikdən sonra təkrarlanır.</p></div>
+ </div>
+ <div class="foot">Arif Həsənov · 656a1</div>
+</section>
+
+<section class="s">
+ <div class="tag r">07 · Yekun</div>
+ <h2 class="r">Nəticə və <span class="g-t">tövsiyələr</span></h2>
+ <div class="grid c2" style="margin-top:12px">
+  <div class="card r"><h3>Əsas nəticələr</h3><ul class="chk">
+   <li>Optimallaşdırma ölçmə ilə başlayır, darboğaz tapılır.</li>
+   <li>Ən böyük effekt: SSD, kifayət qədər RAM, yaxşı soyutma.</li>
+   <li>Startup və fon proseslər azaldılır.</li>
+   <li>Sistem yenilənir, təmizlənir, virusdan qorunur.</li>
+   <li>Nəticələr benchmark ilə təsdiqlənir.</li></ul></div>
+  <div class="card r"><h3>Baxım planı</h3>
+   <div class="step"><em>H</em><p><b>Həftəlik:</b> zibil fayllar, brauzer keşi, yeniləmələr.</p></div>
+   <div class="step"><em>A</em><p><b>Aylıq:</b> tam antivirus skanı, disk sağlamlığı, drayverlər.</p></div>
+   <div class="step"><em>İ</em><p><b>İllik:</b> tozdan təmizləmə, termopasta, ehtiyat nüsxə.</p></div></div>
+ </div>
+ <div class="r" style="margin-top:22px"><div class="big g-t">Diqqətinizə görə təşəkkür edirəm!</div><p class="lead" style="margin:6px 0 0">Arif Həsənov · Qrup 656a1 · Müəllim: Kamran Əbilov</p></div>
+</section>
+
+<div class="hud"><span>Performans</span><b id="score">2400</b><button id="boost">⚡ Boost</button></div>
+<div class="nav"><button id="pv">‹</button><div class="dots" id="dots"></div><div class="num" id="num"></div><button id="nx">›</button></div>
+
+<script>
+const S=[...document.querySelectorAll('.s')],bar=document.getElementById('bar'),num=document.getElementById('num'),dots=document.getElementById('dots');let c=0;
+S.forEach((s,i)=>{s.classList.add(i%2?'B':'A');s.querySelectorAll('.r').forEach((e,j)=>e.style.setProperty('--i',j));const d=document.createElement('span');d.onclick=()=>go(i);dots.appendChild(d)});
+function count(s){s.querySelectorAll('[data-n]').forEach(e=>{const t=+e.dataset.n,t0=performance.now();(function f(n){const p=Math.min(1,(n-t0)/1600);e.textContent=Math.round(t*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0)})}
+function bg(n){}
+(function(){const w=['CPU','RAM','SSD','GPU','CACHE','LATENCY','FPS','THROUGHPUT','BENCHMARK','TRIM','BOOST','THROTTLING','NVMe','BIOS','DRIVER'],cl=['#e8d36a','#e0a040','#c9a24a','#9ccc3c','#d9a26a'];let h='';for(let k=0;k<2;k++)w.forEach((x,i)=>h+='<span style="background:'+cl[i%5]+'">'+x+'</span>');document.getElementById('tick').innerHTML='<div>'+h+'</div>'})();
+function go(n){n=Math.max(0,Math.min(S.length-1,n));c=n;S.forEach((s,i)=>{s.classList.toggle('on',i==n);s.scrollTop=0;s.querySelectorAll('.v').forEach(v=>v.style.strokeDasharray=i==n?(v.dataset.p*2.51)+' 252':'0 252')});
+[...dots.children].forEach((d,i)=>d.classList.toggle('on',i==n));bar.style.width=(n+1)/S.length*100+'%';num.textContent=String(n+1).padStart(2,'0')+' / 08';count(S[n]);bg(n);if(window.GL3D)GL3D(n)}
+pv.onclick=()=>go(c-1);nx.onclick=()=>go(c+1);
+addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key))go(c+1);if(['ArrowLeft','PageUp'].includes(e.key))go(c-1)});
+let x0;addEventListener('touchstart',e=>x0=e.touches[0].clientX);addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>70)go(c+(d<0?1:-1))});
+document.querySelectorAll('.card').forEach(k=>{k.addEventListener('pointermove',e=>{const r=k.getBoundingClientRect();k.style.setProperty('--ry',((e.clientX-r.left)/r.width-.5)*10+'deg');k.style.setProperty('--rx',-((e.clientY-r.top)/r.height-.5)*10+'deg')});k.addEventListener('pointerleave',()=>{k.style.setProperty('--rx','0deg');k.style.setProperty('--ry','0deg')})});
+/* disk blocks */
+const cols=['#d9622b','#ffe14d','#9ccc3c','#ffb347'],bl=document.getElementById('blocks'),st=document.getElementById('st'),B=[];
+for(let i=0;i<60;i++){const d=document.createElement('div');d.k=Math.random()<.18?-1:Math.floor(Math.random()*4);B.push(d);bl.appendChild(d)}
+let sorted=false;function paint(){B.forEach(d=>d.style.background=d.k<0?'#ffffff22':cols[d.k]);const o=[...B].sort((a,b)=>b.k-a.k);B.forEach(d=>d.style.order=sorted?o.indexOf(d):0)}
+function tick(){sorted=!sorted;st.textContent=sorted?'Defraqmentasiya tamamlandı: bloklar ardıcıldır':'Parçalanmış vəziyyət: oxuma yavaşdır';paint()}paint();setInterval(tick,3200);
+/* process table */
+const P=['Brauzer','Antivirus','Video redaktor','Sistem (System)','Yeniləmə xidməti','Ofis proqramı'],tm=document.getElementById('tm');
+P.forEach(p=>{const r=document.createElement('tr');r.innerHTML='<td>'+p+'</td><td>0%</td><td><div class="b"><i style="width:0"></i></div></td>';tm.appendChild(r)});
+function up(){[...tm.rows].forEach((r,i)=>{const v=Math.round(Math.random()*(i==2?80:i==0?45:18));r.cells[1].textContent=v+'%';r.cells[2].querySelector('i').style.width=v+'%'})}up();setInterval(up,1400);
+
+/* 3D world */
+try{(function(){
+if(!window.THREE){document.body.classList.add('nogl');return}
+const cvs=document.getElementById('gl'),R=new THREE.WebGLRenderer({canvas:cvs,antialias:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));
+const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,.1,300);
+const sk=document.createElement('canvas');sk.width=2;sk.height=256;const k2=sk.getContext('2d'),gd=k2.createLinearGradient(0,0,0,256);
+gd.addColorStop(0,'#2f4b36');gd.addColorStop(.5,'#4c6b43');gd.addColorStop(1,'#7a5f35');k2.fillStyle=gd;k2.fillRect(0,0,2,256);
+sc.background=new THREE.CanvasTexture(sk);sc.fog=new THREE.Fog(0x4c6b43,50,140);
+sc.add(new THREE.HemisphereLight(0xf3ecd0,0x8a6a3a,.95));
+const dl=new THREE.DirectionalLight(0xffffff,1.05);dl.position.set(10,25,12);sc.add(dl);
+const pA=new THREE.PointLight(0xffb347,2.4,70),pB=new THREE.PointLight(0xe07b2c,2.4,70),pC=new THREE.PointLight(0xb6e04a,1.8,70);sc.add(pA,pB,pC);
+const PAL=['#e07b2c','#ffb347','#e8d36a','#9ccc3c','#c9a24a'].map(x=>new THREE.Color(x));
+const pal=(t,o=new THREE.Color())=>{t=(((t%1)+1)%1)*5;const i=Math.floor(t);return o.copy(PAL[i%5]).lerp(PAL[(i+1)%5],t-i)};
+const mat=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:.35,roughness:.45},o));
+const box=(w,h,d,c,x=0,y=0,z=0,o)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c,o));m.position.set(x,y,z);return m};
+const cyl=(r,h,c,x,y,z,o,sg=24)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg),mat(c,o));m.position.set(x,y,z);return m};
+const tor=(r,t,c,o)=>new THREE.Mesh(new THREE.TorusGeometry(r,t,12,72),mat(c,o));
+const glow=c=>({emissive:c,emissiveIntensity:.9});
+const G=()=>new THREE.Group(),place=(g,x,z)=>{g.position.set(x,0,z);sc.add(g);return g};
+let cur=0,px=0,py=0,mx=0,my=0,bo=0,bt=0,ft=0,t=0,off=0;const ups=[];window.GL3D=n=>cur=n;
+
+/* board */
+sc.add(box(66,1,50,'#2e4630',0,-.5,0,{roughness:.7,metalness:.1}));
+sc.add(box(68,.8,52,'#c9a24a',0,-.95,0,{metalness:.6}));
+const gh=new THREE.GridHelper(64,32,0xd9b86a,0x3d5a40);gh.scale.z=.78;gh.position.y=.02;gh.material.transparent=true;gh.material.opacity=.35;sc.add(gh);
+const sun=new THREE.Mesh(new THREE.SphereGeometry(14,32,32),new THREE.MeshBasicMaterial({color:0xf5d98a,fog:false}));sun.position.set(-45,38,-80);sc.add(sun);
+
+/* traces + packets */
+const A={cpu:[0,0],ram:[14,-2],fan:[14,-14],os:[-14,-2],hdd:[-12,14],ssd:[2,14],sh:[14,14],bars:[-14,-14]};
+const pairs=[['cpu','ram'],['cpu','fan'],['cpu','os'],['cpu','hdd'],['cpu','ssd'],['cpu','sh'],['cpu','bars'],['ram','fan'],['hdd','ssd'],['os','bars'],['ssd','sh']];
+const paths=[];let ci=0;
+function addPath(pts,col){const len=[];let tot=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],dx=Math.abs(b.x-a.x),dz=Math.abs(b.z-a.z),d=a.distanceTo(b);len.push(d);tot+=d;if(d<.01)continue;
+ const m=new THREE.Mesh(new THREE.BoxGeometry(dx||.18,.08,dz||.18),new THREE.MeshBasicMaterial({color:col}));m.position.copy(a).add(b).multiplyScalar(.5);m.position.y=.06;sc.add(m)}paths.push({pts,len,tot,col})}
+pairs.forEach(([a,b])=>{for(let l=-1;l<=1;l++){const[x1,z1]=A[a],[x2,z2]=A[b],o=l*.7,m=(x1+x2)/2+l*1.2;addPath([[x1,z1+o],[m,z1+o],[m,z2+o],[x2,z2+o]].map(p=>new THREE.Vector3(p[0],.08,p[1])),PAL[ci++%5])}});
+const pk=[],pgm=new THREE.SphereGeometry(.3,10,10),wh=new THREE.Color('#fff');
+paths.forEach(p=>{for(let q=0;q<2;q++){const m=new THREE.Mesh(pgm,new THREE.MeshBasicMaterial({color:p.col.clone().lerp(wh,.45)}));m.p=p;m.s=Math.random()*p.tot;sc.add(m);pk.push(m)}});
+function at(p,s,o){for(let i=0;i<p.len.length;i++){if(s<=p.len[i]){o.lerpVectors(p.pts[i],p.pts[i+1],s/p.len[i]);return}s-=p.len[i]}o.copy(p.pts[p.pts.length-1])}
+
+/* CPU */
+const cpu=place(G(),0,0);cpu.add(box(7,.5,7,'#c9a24a',0,.25,0,{metalness:.7}));cpu.add(box(5,1.2,5,'#d8d8d0',0,1.1,0,{metalness:.8,roughness:.25}));
+const core=box(2,.1,2,'#ffb347',0,1.75,0,glow('#ffb347'));cpu.add(core);
+[[-3,-3],[3,-3],[-3,3],[3,3]].forEach(p=>cpu.add(cyl(.35,.9,'#e07b2c',p[0],.9,p[1],glow('#e07b2c'))));
+const cr=new THREE.Mesh(new THREE.TorusGeometry(4.6,.1,8,80),new THREE.MeshBasicMaterial());cr.rotation.x=Math.PI/2;cr.position.y=1.2;cpu.add(cr);
+const rings=G();rings.position.y=6.5;[2.6,3.4,4.2].forEach((r,i)=>rings.add(tor(r,.09,['#ffb000','#ffb347','#9ccc3c'][i],glow(['#e07b2c','#ffb347','#7aa81f'][i]))));cpu.add(rings);
+ups.push((t,ft)=>{pal(t*.15,cr.material.color);core.material.emissiveIntensity=.7+Math.sin(t*4)*.3+bo*.9;rings.children.forEach((r,i)=>r.rotation.set(ft*(.9-i*.25),ft*(.4+i*.3),ft*i*.3))});
+
+/* RAM */
+const ram=place(G(),14,-2),strips=[];
+for(let i=0;i<4;i++){const g=G(),c=i%2?'#ffb000':'#b5651d';g.position.x=(i-1.5)*2.4;g.add(box(1,5,9,c,0,2.7,0));g.add(box(1.1,.5,8.8,'#c9a24a',0,.35,0,{metalness:.9}));for(let j=0;j<4;j++)g.add(box(.2,1.3,1.6,'#5a5440',.55,3,-3.2+j*2.1));const s=box(1.15,.3,8.6,'#fff',0,5.3,0,glow('#fff'));s.i=i;strips.push(s);g.add(s);ram.add(g)}
+ups.push(t=>strips.forEach(s=>{pal(t*.25+s.i*.25,s.material.color);s.material.emissive.copy(s.material.color)}));
+
+/* Fan */
+const fan=place(G(),14,-14),fb=G();fan.add(box(11,.6,11,'#8a5a2b',0,.3,0));
+const fr=new THREE.Mesh(new THREE.TorusGeometry(5,.35,12,48),mat('#b8893a',{metalness:.6}));fr.rotation.x=Math.PI/2;fr.position.y=1.4;fan.add(fr);
+fb.position.y=1.6;for(let i=0;i<7;i++){const p=G();p.rotation.y=i/7*Math.PI*2;const b=box(4,.14,1.7,pal(i/7).getStyle(),2.9,0,0);b.rotation.x=.55;p.add(b);fb.add(p)}
+fb.add(cyl(1.1,1,'#ffb347',0,0,0,glow('#ffb347')));fan.add(fb);
+const fring=new THREE.Mesh(new THREE.TorusGeometry(5.6,.1,8,80),new THREE.MeshBasicMaterial());fring.rotation.x=Math.PI/2;fring.position.y=1.4;fan.add(fring);
+ups.push((t,ft)=>{fb.rotation.y=-ft*6;pal(t*.2,fring.material.color)});
+
+/* OS cubes */
+const os=place(G(),-14,-2),cb=[];os.add(box(10,.4,10,'#b8893a',0,.2,0));
+for(let i=0;i<5;i++)for(let j=0;j<5;j++){const m=box(1.2,1,1.2,'#fff',(i-2)*1.9,0,(j-2)*1.9);m.ph=i+j;cb.push(m);os.add(m)}
+ups.push((t,ft)=>cb.forEach(m=>{const h=1.5+(Math.sin(ft*2+m.ph*.8)+1)*1.6;m.scale.y=h;m.position.y=h/2+.4;pal(m.ph/10+t*.1,m.material.color)}));
+
+/* HDD */
+const hdd=place(G(),-12,14),pl=G();hdd.add(box(9.4,.6,9.4,'#8a5a2b',0,.3,0));pl.position.y=.9;
+pl.add(cyl(4,.15,'#d8d4c4',0,0,0,{metalness:.7,roughness:.2},56));
+const tk=[2,3,3.6].map(r=>{const m=tor(r,.05,'#ffb347',glow('#ffb347'));m.rotation.x=Math.PI/2;m.position.y=.12;pl.add(m);return m});
+pl.add(cyl(.8,.3,'#ffb000',0,.1,0,glow('#e07b2c')));hdd.add(pl);
+const arm=G();arm.position.set(4.2,1.1,-3.8);arm.add(box(.4,.2,6.4,'#b8893a',0,0,3.2));arm.add(box(.9,.35,.9,'#9ccc3c',0,0,6.4,glow('#7aa81f')));hdd.add(arm);
+ups.push((t,ft)=>{pl.rotation.y=-ft*4;arm.rotation.y=.8+Math.sin(ft*1.5)*.35;tk.forEach((m,i)=>pal(t*.2+i*.3,m.material.emissive))});
+
+/* SSD */
+const ssd=place(G(),2,14);ssd.add(box(9,.5,5,'#b8893a',0,.25,0));for(let i=0;i<4;i++)ssd.add(box(1.6,.35,1.6,'#e07b2c',-2.6+i*1.8,.65,-.8));
+ssd.add(box(2.2,.35,1.8,'#5a5440',-2.6,.65,1.4));ssd.add(box(1.8,.5,5.1,'#c9a24a',4.4,.25,0,{metalness:.9}));
+const sst=box(8,.12,.3,'#ffb347',0,.55,2.3,glow('#ffb347'));ssd.add(sst);
+ups.push(t=>{ssd.position.y=Math.sin(t*1.5)*.4+.4;pal(t*.3,sst.material.color);sst.material.emissive.copy(sst.material.color)});
+
+/* Shield */
+const sh=place(G(),14,14);sh.add(cyl(5,.4,'#b8893a',0,.2,0));
+const wf=new THREE.Mesh(new THREE.IcosahedronGeometry(3.4,1),new THREE.MeshBasicMaterial({wireframe:true}));wf.position.y=5;sh.add(wf);
+const c2=new THREE.Mesh(new THREE.OctahedronGeometry(1.5),mat('#9ccc3c',glow('#7aa81f')));c2.position.y=5;sh.add(c2);
+const orb=[];for(let i=0;i<8;i++){const g=G();g.position.y=5;g.rotation.set(i*.8,i*.5,i*.3);g.add(box(.6,.6,.6,pal(i/8).getStyle(),4.8,0,0,glow(pal(i/8).getStyle())));g.sp=.6+i*.12;orb.push(g);sh.add(g)}
+ups.push((t,ft)=>{wf.rotation.set(t*.3,t*.5,0);pal(t*.2,wf.material.color);c2.rotation.set(t,t*.8,0);c2.scale.setScalar(1+Math.sin(t*3)*.12);orb.forEach(g=>g.rotation.y=ft*g.sp)});
+
+/* Bars */
+const br=place(G(),-14,-14),bb=[],H1=[5.6,4.8,4.2,5.2],H2=[1.9,2.6,1.7,3.5];br.add(box(12,.4,6,'#c9a24a',0,.2,0,{metalness:.7}));
+H1.forEach((h,i)=>{const a=box(1,1,1,'#d9622b',-4.2+i*2.8,0,0,glow('#9a3a10')),b=box(1,1,1,'#9ccc3c',-4.2+i*2.8+1.15,0,0,glow('#7aa81f'));a.h=h;b.h=H2[i];bb.push(a,b);br.add(a,b)});
+let gr=.1;ups.push(()=>{gr+=((cur==6?1:.1)-gr)*.04;bb.forEach(m=>{const h=Math.max(.05,m.h*gr);m.scale.y=h;m.position.y=h/2+.4})});
+
+/* capacitors + dust */
+for(let i=0;i<55;i++){let x,z;do{x=(Math.random()-.5)*60;z=(Math.random()-.5)*44}while(!Object.values(A).every(a=>Math.hypot(x-a[0],z-a[1])>9));const h=.8+Math.random()*1.6;sc.add(cyl(.55,h,pal(Math.random()).getStyle(),x,h/2,z,{metalness:.5}))}
+const N=160,pp=new Float32Array(N*3),pc=new Float32Array(N*3);
+for(let i=0;i<N;i++){pp.set([(Math.random()-.5)*70,3+Math.random()*20,(Math.random()-.5)*50],i*3);pal(Math.random()).toArray(pc,i*3)}
+const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));pg.setAttribute('color',new THREE.BufferAttribute(pc,3));
+const dust=new THREE.Points(pg,new THREE.PointsMaterial({size:.35,vertexColors:true,transparent:true,opacity:.8}));sc.add(dust);
+
+/* camera path */
+const C=[[[2,16,34],[0,0,2]],[[8,10,13],[0,3,0]],[[2,13,10],[14,2,-8]],[[-6,12,10],[-14,1,-2]],[[-5,12,28],[-5,1,14]],[[6,12,27],[14,3,14]],[[-8,12,0],[-14,2,-14]],[[0,32,30],[0,0,0]]].map(a=>a.map(v=>new THREE.Vector3(v[0],v[1],v[2])));
+const cp=C[0][0].clone(),cl=C[0][1].clone(),clk=new THREE.Clock(),sE=document.getElementById('score');
+document.getElementById('boost').onclick=e=>{bt=bt?0:1;e.currentTarget.classList.toggle('on',!!bt)};
+addEventListener('pointermove',e=>{px=e.clientX/innerWidth-.5;py=e.clientY/innerHeight-.5});
+function rz(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight}rz();addEventListener('resize',rz);
+function loop(){const dt=Math.min(.05,clk.getDelta());t+=dt;bo+=(bt-bo)*.05;ft+=dt*(1+bo*2.5);
+ const k=C[cur];cp.lerp(k[0],.03);cl.lerp(k[1],.03);mx+=(px-mx)*.05;my+=(py-my)*.05;
+ cam.position.set(cp.x+Math.sin(t*.25)*1.5+mx*4,cp.y+Math.cos(t*.2)*.8-my*2,cp.z);cam.lookAt(cl);
+ const w=innerWidth,h=innerHeight,tg=w>=900?(cur%2?.2:-.2)*w:0;off+=(tg-off)*.05;cam.setViewOffset(w,h,off,0,w,h);
+ pk.forEach(m=>{m.s=(m.s+dt*7*(1+bo*2.5))%m.p.tot;at(m.p,m.s,m.position);m.position.y=.35});
+ ups.forEach(f=>f(t,ft));dust.rotation.y=t*.02;
+ pA.position.set(Math.sin(t*.7)*22,12,Math.cos(t*.5)*14);pB.position.set(Math.cos(t*.6)*22,10,Math.sin(t*.8)*14);pC.position.set(Math.sin(t*.4)*18,14,-10);
+ sE.textContent=Math.round(2400+bo*7600+Math.sin(t*3)*30*(1+bo));
+ R.render(sc,cam);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+})();}catch(e){document.body.classList.add('nogl')}
+
+go(0);
+</script>
+</body>
+</html>
